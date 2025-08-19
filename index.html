@@ -1,155 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>ADSS Portfolio System</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADSS Member Profiles</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js"></script>
-</head>
-<body class="bg-gray-100">
+  <script type="module">
+    // Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <!-- Login Section -->
-  <div id="loginSection" class="flex justify-center items-center h-screen">
-    <div class="bg-white shadow-lg rounded-xl p-8 w-96">
-      <h2 class="text-xl font-bold text-center mb-6">Admin Login</h2>
-      <input id="username" type="text" placeholder="Username" class="w-full mb-3 p-2 border rounded">
-      <input id="password" type="password" placeholder="Password" class="w-full mb-3 p-2 border rounded">
-      <button onclick="login()" class="w-full bg-blue-600 text-white p-2 rounded">Login</button>
-      <p id="loginError" class="text-red-500 text-sm mt-2"></p>
-    </div>
-  </div>
-
-  <!-- Dashboard Section -->
-  <div id="dashboardSection" class="hidden p-6">
-    <h1 class="text-2xl font-bold mb-4">ADSS Admin Dashboard</h1>
-
-    <!-- OC Contribution Form -->
-    <div class="bg-white p-4 rounded shadow mb-6">
-      <h2 class="text-lg font-semibold mb-3">OC Contribution Form</h2>
-      <input id="ocEventName" type="text" placeholder="Event Name" class="w-full mb-2 p-2 border rounded">
-      <input id="ocDate" type="date" class="w-full mb-2 p-2 border rounded">
-      <input id="ocIndex" type="text" placeholder="Index Number" class="w-full mb-2 p-2 border rounded">
-      <input id="ocPosition" type="text" placeholder="OC Position" class="w-full mb-2 p-2 border rounded">
-      <button onclick="saveOC()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
-    </div>
-
-    <!-- Executive Board Form -->
-    <div class="bg-white p-4 rounded shadow mb-6">
-      <h2 class="text-lg font-semibold mb-3">Executive Board Position Form</h2>
-      <input id="ebPosition" type="text" placeholder="Position" class="w-full mb-2 p-2 border rounded">
-      <input id="ebIndex" type="text" placeholder="Index Number" class="w-full mb-2 p-2 border rounded">
-      <input id="ebStart" type="date" class="w-full mb-2 p-2 border rounded">
-      <input id="ebEnd" type="date" class="w-full mb-2 p-2 border rounded">
-      <button onclick="saveEB()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
-    </div>
-
-    <!-- Member Position Form -->
-    <div class="bg-white p-4 rounded shadow mb-6">
-      <h2 class="text-lg font-semibold mb-3">Member Position Form</h2>
-      <input id="teamIndex" type="text" placeholder="Index Number" class="w-full mb-2 p-2 border rounded">
-      <input id="teamName" type="text" placeholder="Team Name" class="w-full mb-2 p-2 border rounded">
-      <button onclick="saveTeam()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
-    </div>
-
-    <!-- Search Profile -->
-    <div class="bg-white p-4 rounded shadow mb-6">
-      <h2 class="text-lg font-semibold mb-3">Search Profile</h2>
-      <input id="searchIndex" type="text" placeholder="Enter Index Number" class="w-full mb-2 p-2 border rounded">
-      <button onclick="searchProfile()" class="bg-blue-600 text-white px-4 py-2 rounded">Search</button>
-      <div id="profileResult" class="mt-4"></div>
-    </div>
-  </div>
-
-  <script>
-    // 🔹 Replace this with your Firebase Config
+    // 🔹 Replace with your Firebase config
     const firebaseConfig = {
-      apiKey: "YOUR_KEY",
+      apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT",
+      projectId: "YOUR_PROJECT_ID",
       storageBucket: "YOUR_PROJECT.appspot.com",
       messagingSenderId: "YOUR_SENDER_ID",
       appId: "YOUR_APP_ID"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    // Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    // Login Function
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      if (user === "admin" && pass === "admin123") {
+    // 🔹 Hardcoded Admin Login
+    window.loginAdmin = () => {
+      const username = document.getElementById("adminUser").value;
+      const password = document.getElementById("adminPass").value;
+
+      if (username === "admin" && password === "1234") {
         document.getElementById("loginSection").classList.add("hidden");
-        document.getElementById("dashboardSection").classList.remove("hidden");
+        document.getElementById("adminSection").classList.remove("hidden");
       } else {
-        document.getElementById("loginError").innerText = "Invalid credentials!";
+        alert("❌ Invalid login. Try again!");
       }
-    }
+    };
 
-    // Save OC Contribution
-    function saveOC() {
-      db.collection("oc_contributions").add({
-        eventName: document.getElementById("ocEventName").value,
-        date: document.getElementById("ocDate").value,
-        index: document.getElementById("ocIndex").value,
-        position: document.getElementById("ocPosition").value
-      }).then(() => alert("OC Contribution Saved!"));
-    }
+    // 🔹 Save OC Contribution
+    window.saveOC = async () => {
+      const index = document.getElementById("ocIndex").value;
+      const eventName = document.getElementById("eventName").value;
+      const date = document.getElementById("eventDate").value;
+      const position = document.getElementById("ocPosition").value;
 
-    // Save Executive Board
-    function saveEB() {
-      db.collection("executive_board").add({
-        position: document.getElementById("ebPosition").value,
-        index: document.getElementById("ebIndex").value,
-        startDate: document.getElementById("ebStart").value,
-        endDate: document.getElementById("ebEnd").value
-      }).then(() => alert("Executive Board Position Saved!"));
-    }
+      await addDoc(collection(db, "oc_contributions"), {
+        index, eventName, date, position
+      });
+      alert("✅ OC Contribution saved!");
+    };
 
-    // Save Team Membership
-    function saveTeam() {
-      db.collection("team_membership").add({
-        index: document.getElementById("teamIndex").value,
-        team: document.getElementById("teamName").value
-      }).then(() => alert("Team Membership Saved!"));
-    }
+    // 🔹 Save Exec Board Position
+    window.saveExec = async () => {
+      const index = document.getElementById("execIndex").value;
+      const position = document.getElementById("execPosition").value;
+      const startDate = document.getElementById("execStart").value;
+      const endDate = document.getElementById("execEnd").value;
 
-    // Search Profile
-    async function searchProfile() {
+      await addDoc(collection(db, "executive_positions"), {
+        index, position, startDate, endDate
+      });
+      alert("✅ Executive Position saved!");
+    };
+
+    // 🔹 Save Member Team
+    window.saveTeam = async () => {
+      const index = document.getElementById("teamIndex").value;
+      const teamName = document.getElementById("teamName").value;
+
+      await addDoc(collection(db, "team_members"), { index, teamName });
+      alert("✅ Team membership saved!");
+    };
+
+    // 🔹 Search Profile
+    window.searchProfile = async () => {
       const index = document.getElementById("searchIndex").value;
-      let resultHTML = `<h3 class='font-bold text-lg mb-2'>Profile for ${index}</h3>`;
+      let resultHTML = "";
 
-      // Fetch OC
-      const ocSnap = await db.collection("oc_contributions").where("index", "==", index).get();
-      resultHTML += "<h4 class='font-semibold'>OC Contributions:</h4><ul>";
+      // OC Contributions
+      const ocQuery = query(collection(db, "oc_contributions"), where("index", "==", index));
+      const ocSnap = await getDocs(ocQuery);
+      resultHTML += `<h3 class='font-bold text-lg'>OC Contributions</h3>`;
       ocSnap.forEach(doc => {
-        let d = doc.data();
-        resultHTML += `<li>${d.eventName} (${d.date}) - ${d.position}</li>`;
+        const d = doc.data();
+        resultHTML += `<p>📌 ${d.eventName} (${d.date}) - ${d.position}</p>`;
       });
-      resultHTML += "</ul>";
 
-      // Fetch Executive Board
-      const ebSnap = await db.collection("executive_board").where("index", "==", index).get();
-      resultHTML += "<h4 class='font-semibold mt-2'>Executive Board:</h4><ul>";
-      ebSnap.forEach(doc => {
-        let d = doc.data();
-        resultHTML += `<li>${d.position} (${d.startDate} to ${d.endDate})</li>`;
+      // Executive Positions
+      const execQuery = query(collection(db, "executive_positions"), where("index", "==", index));
+      const execSnap = await getDocs(execQuery);
+      resultHTML += `<h3 class='font-bold text-lg mt-4'>Executive Positions</h3>`;
+      execSnap.forEach(doc => {
+        const d = doc.data();
+        resultHTML += `<p>👔 ${d.position} (${d.startDate} → ${d.endDate})</p>`;
       });
-      resultHTML += "</ul>";
 
-      // Fetch Team Membership
-      const teamSnap = await db.collection("team_membership").where("index", "==", index).get();
-      resultHTML += "<h4 class='font-semibold mt-2'>Team Membership:</h4><ul>";
+      // Team Memberships
+      const teamQuery = query(collection(db, "team_members"), where("index", "==", index));
+      const teamSnap = await getDocs(teamQuery);
+      resultHTML += `<h3 class='font-bold text-lg mt-4'>Team Memberships</h3>`;
       teamSnap.forEach(doc => {
-        let d = doc.data();
-        resultHTML += `<li>${d.team}</li>`;
+        const d = doc.data();
+        resultHTML += `<p>🤝 ${d.teamName}</p>`;
       });
-      resultHTML += "</ul>";
 
-      document.getElementById("profileResult").innerHTML = resultHTML;
-    }
+      document.getElementById("profileResult").innerHTML = resultHTML || "No records found.";
+    };
   </script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+
+  <h1 class="text-3xl font-bold text-blue-600 mb-6">ADSS Member Profile System</h1>
+
+  <!-- Login -->
+  <div id="loginSection" class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+    <h2 class="text-xl font-bold mb-4">🔐 Admin Login</h2>
+    <input id="adminUser" type="text" placeholder="Username" class="w-full p-2 border rounded mb-2"/>
+    <input id="adminPass" type="password" placeholder="Password" class="w-full p-2 border rounded mb-2"/>
+    <button onclick="loginAdmin()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Login</button>
+  </div>
+
+  <!-- Admin Section -->
+  <div id="adminSection" class="hidden w-full max-w-3xl space-y-6 mt-6">
+
+    <!-- OC Form -->
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4">📝 Add OC Contribution</h2>
+      <input id="ocIndex" placeholder="Index Number" class="w-full p-2 border rounded mb-2"/>
+      <input id="eventName" placeholder="Event Name" class="w-full p-2 border rounded mb-2"/>
+      <input id="eventDate" type="date" class="w-full p-2 border rounded mb-2"/>
+      <input id="ocPosition" placeholder="OC Position" class="w-full p-2 border rounded mb-2"/>
+      <button onclick="saveOC()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
+    </div>
+
+    <!-- Executive Form -->
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4">👔 Add Executive Position</h2>
+      <input id="execIndex" placeholder="Index Number" class="w-full p-2 border rounded mb-2"/>
+      <input id="execPosition" placeholder="Position" class="w-full p-2 border rounded mb-2"/>
+      <input id="execStart" type="date" class="w-full p-2 border rounded mb-2"/>
+      <input id="execEnd" type="date" class="w-full p-2 border rounded mb-2"/>
+      <button onclick="saveExec()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
+    </div>
+
+    <!-- Team Form -->
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-bold mb-4">🤝 Add Team Membership</h2>
+      <input id="teamIndex" placeholder="Index Number" class="w-full p-2 border rounded mb-2"/>
+      <input id="teamName" placeholder="Team Name" class="w-full p-2 border rounded mb-2"/>
+      <button onclick="saveTeam()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
+    </div>
+  </div>
+
+  <!-- Search Profile -->
+  <div class="bg-white p-6 rounded-xl shadow-md mt-6 w-full max-w-3xl">
+    <h2 class="text-xl font-bold mb-4">🔎 Search Member Profile</h2>
+    <input id="searchIndex" placeholder="Enter Index Number" class="w-full p-2 border rounded mb-2"/>
+    <button onclick="searchProfile()" class="bg-blue-600 text-white px-4 py-2 rounded">Search</button>
+    <div id="profileResult" class="mt-4 text-gray-800"></div>
+  </div>
+
 </body>
 </html>
-
