@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ADSS Portfolio System</title>
+  <title>ADSS Member Portfolio System</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
@@ -23,52 +23,71 @@
   <!-- Forms Section -->
   <div id="formsSection" class="hidden">
 
-    <!-- Profile Creation -->
+    <!-- Create Profile -->
     <section class="bg-white shadow-md rounded-2xl p-6 mb-8">
       <h2 class="text-lg font-bold mb-4">Create Member Profile</h2>
-      <input id="name" type="text" placeholder="Name" class="w-full p-2 border rounded mb-3">
-      <input id="indexNo" type="text" placeholder="Index Number" class="w-full p-2 border rounded mb-3">
-      <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Create Profile</button>
+      <input id="profileName" type="text" placeholder="Name" class="w-full p-2 border rounded mb-3">
+      <input id="profileIndex" type="text" placeholder="Index Number" class="w-full p-2 border rounded mb-3">
+      <button id="createProfile" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Create Profile</button>
     </section>
 
     <!-- OC Contribution Form -->
     <section class="bg-white shadow-md rounded-2xl p-6 mb-8">
       <h2 class="text-lg font-bold mb-4">OC Contribution</h2>
-      <input type="text" placeholder="Event Name" class="w-full p-2 border rounded mb-3">
-      <input type="date" class="w-full p-2 border rounded mb-3">
-      <input type="text" placeholder="Index Number" class="w-full p-2 border rounded mb-3">
-      <input type="text" placeholder="Hold OC Position" class="w-full p-2 border rounded mb-3">
-      <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+      <input id="ocEvent" type="text" placeholder="Event Name" class="w-full p-2 border rounded mb-3">
+      <input id="ocDate" type="date" class="w-full p-2 border rounded mb-3">
+      <input id="ocIndex" type="text" placeholder="Index Number" class="w-full p-2 border rounded mb-3">
+      <input id="ocPosition" type="text" placeholder="Hold OC Position" class="w-full p-2 border rounded mb-3">
+      <button id="submitOC" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
     </section>
 
     <!-- Executive Board Position Form -->
     <section class="bg-white shadow-md rounded-2xl p-6 mb-8">
       <h2 class="text-lg font-bold mb-4">Executive Board Position</h2>
-      <input type="text" placeholder="Position" class="w-full p-2 border rounded mb-3">
-      <input type="text" placeholder="Index Number" class="w-full p-2 border rounded mb-3">
-      <input type="date" placeholder="Start Date" class="w-full p-2 border rounded mb-3">
-      <input type="date" placeholder="End Date" class="w-full p-2 border rounded mb-3">
-      <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+      <input id="ebPosition" type="text" placeholder="Position" class="w-full p-2 border rounded mb-3">
+      <input id="ebIndex" type="text" placeholder="Index Number" class="w-full p-2 border rounded mb-3">
+      <input id="ebStart" type="date" class="w-full p-2 border rounded mb-3">
+      <input id="ebEnd" type="date" class="w-full p-2 border rounded mb-3">
+      <button id="submitEB" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
     </section>
 
     <!-- Team Membership Form -->
     <section class="bg-white shadow-md rounded-2xl p-6 mb-8">
       <h2 class="text-lg font-bold mb-4">Team Membership</h2>
-      <input type="text" placeholder="Index Number" class="w-full p-2 border rounded mb-3">
-      <input type="text" placeholder="Team Name" class="w-full p-2 border rounded mb-3">
-      <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+      <input id="teamIndex" type="text" placeholder="Index Number" class="w-full p-2 border rounded mb-3">
+      <input id="teamName" type="text" placeholder="Team Name" class="w-full p-2 border rounded mb-3">
+      <button id="submitTeam" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
     </section>
 
     <!-- Search Profile -->
     <section class="bg-white shadow-md rounded-2xl p-6 mb-8">
       <h2 class="text-lg font-bold mb-4">Search Profile</h2>
       <input id="searchIndex" type="text" placeholder="Enter Index Number" class="w-full p-2 border rounded mb-3">
-      <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Search</button>
+      <button id="searchBtn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Search</button>
       <div id="profileResult" class="mt-4"></div>
     </section>
   </div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js"></script>
+
   <script>
+    // ✅ Replace with your Firebase config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Admin login
     function adminLogin() {
       let user = document.getElementById("adminUser").value;
       let pass = document.getElementById("adminPass").value;
@@ -79,6 +98,85 @@
         alert("Invalid Credentials");
       }
     }
+
+    // Create Profile
+    document.getElementById("createProfile").addEventListener("click", async () => {
+      const name = document.getElementById("profileName").value;
+      const index = document.getElementById("profileIndex").value;
+      await db.collection("profiles").doc(index).set({
+        name: name,
+        indexNo: index
+      });
+      alert("Profile Created!");
+    });
+
+    // OC Contribution
+    document.getElementById("submitOC").addEventListener("click", async () => {
+      await db.collection("oc_contributions").add({
+        eventName: document.getElementById("ocEvent").value,
+        date: document.getElementById("ocDate").value,
+        indexNo: document.getElementById("ocIndex").value,
+        position: document.getElementById("ocPosition").value,
+        timestamp: new Date()
+      });
+      alert("OC Contribution Saved!");
+    });
+
+    // Executive Board
+    document.getElementById("submitEB").addEventListener("click", async () => {
+      await db.collection("executive_board").add({
+        position: document.getElementById("ebPosition").value,
+        indexNo: document.getElementById("ebIndex").value,
+        startDate: document.getElementById("ebStart").value,
+        endDate: document.getElementById("ebEnd").value,
+        timestamp: new Date()
+      });
+      alert("Executive Board Position Saved!");
+    });
+
+    // Team Membership
+    document.getElementById("submitTeam").addEventListener("click", async () => {
+      await db.collection("team_memberships").add({
+        indexNo: document.getElementById("teamIndex").value,
+        teamName: document.getElementById("teamName").value,
+        timestamp: new Date()
+      });
+      alert("Team Membership Saved!");
+    });
+
+    // Search Profile
+    document.getElementById("searchBtn").addEventListener("click", async () => {
+      const index = document.getElementById("searchIndex").value;
+      let resultDiv = document.getElementById("profileResult");
+      resultDiv.innerHTML = "";
+
+      // Basic profile
+      const profileDoc = await db.collection("profiles").doc(index).get();
+      if(profileDoc.exists) {
+        resultDiv.innerHTML += `<h3 class="font-bold text-lg">Profile: ${profileDoc.data().name} (${index})</h3>`;
+      }
+
+      // OC
+      const ocSnap = await db.collection("oc_contributions").where("indexNo", "==", index).get();
+      ocSnap.forEach(doc => {
+        let data = doc.data();
+        resultDiv.innerHTML += `<p><b>OC:</b> ${data.eventName} (${data.date}) - ${data.position}</p>`;
+      });
+
+      // EB
+      const ebSnap = await db.collection("executive_board").where("indexNo", "==", index).get();
+      ebSnap.forEach(doc => {
+        let data = doc.data();
+        resultDiv.innerHTML += `<p><b>Exec Board:</b> ${data.position} (${data.startDate} → ${data.endDate})</p>`;
+      });
+
+      // Teams
+      const teamSnap = await db.collection("team_memberships").where("indexNo", "==", index).get();
+      teamSnap.forEach(doc => {
+        let data = doc.data();
+        resultDiv.innerHTML += `<p><b>Team:</b> ${data.teamName}</p>`;
+      });
+    });
   </script>
 </body>
 </html>
